@@ -201,7 +201,7 @@ export default function Personal() {
       >
         <div className="flex-1">
           <p className="text-zinc-600 dark:text-zinc-400">
-          I'm a software engineer with a wide range of creative interests and hobbies. This site is my hub for documenting life in faith, career, business etc. and the things I'm learning along the way. One life, one story.
+          I'm a software engineer with a wide range of creative interests and hobbies. This site is my hub for documenting life in key areas and the things I'm learning along the way. One life, one story.
           </p>
           <div className="mt-6">
             <Image
@@ -223,7 +223,7 @@ export default function Personal() {
         variants={VARIANTS_SECTION}
         transition={TRANSITION_SECTION}
       >
-        <h3 className="mb-5 text-lg font-medium">Work</h3>
+        <h3 className="mb-5 text-lg font-medium">Career</h3>
         <div className="flex flex-col space-y-2">
           {WORK_EXPERIENCE.map((job) => (
             <a
@@ -261,7 +261,7 @@ export default function Personal() {
         variants={VARIANTS_SECTION}
         transition={TRANSITION_SECTION}
       >
-        <h3 className="mb-3 text-lg font-medium">Projects</h3>
+        <h3 className="mb-3 text-lg font-medium">Hobbies</h3>
         <div className="flex flex-col space-y-2">
           {PROJECTS.map((project) => (
             <Link
