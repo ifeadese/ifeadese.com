@@ -5,6 +5,12 @@ export default function ScheduleChatPage() {
   const [InlineWidget, setInlineWidget] = useState<React.ComponentType<{
     url: string
     styles?: React.CSSProperties
+    pageSettings?: {
+      hideEventTypeDetails?: boolean
+      hideLandingPageDetails?: boolean
+      primaryColor?: string
+      textColor?: string
+    }
   }> | null>(null)
 
   useEffect(() => {
@@ -29,6 +35,12 @@ export default function ScheduleChatPage() {
             styles={{
               height: '700px',
               width: '100%',
+            }}
+            pageSettings={{
+              hideEventTypeDetails: true,
+              hideLandingPageDetails: true,
+              primaryColor: '00a2ff',
+              textColor: '4d5055',
             }}
           />
         ) : (
