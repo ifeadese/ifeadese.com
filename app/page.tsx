@@ -158,7 +158,7 @@ function ServicesSection() {
       variants={VARIANTS_SECTION}
       transition={TRANSITION_SECTION}
     >
-      <h3 className="mb-3 text-lg font-medium">Services</h3>
+      <h3 className="mb-3 text-lg font-medium">Business</h3>
       <div className="flex flex-col space-y-2">
         {SERVICES.map((service) => (
           <Link
@@ -201,9 +201,7 @@ export default function Personal() {
       >
         <div className="flex-1">
           <p className="text-zinc-600 dark:text-zinc-400">
-            I&apos;m a software engineer with a wide range of creative interests
-            and hobbies. This site is my home base for documenting life—faith,
-            career, business, and the things I&apos;m learning along the way.
+          I'm a software engineer with a wide range of creative interests and hobbies. This site is my hub for documenting life in faith, career, business etc. and the things I'm learning along the way. One life, one story.
           </p>
           <div className="mt-6">
             <Image
@@ -215,6 +213,7 @@ export default function Personal() {
               className="w-full rounded-2xl grayscale object-cover"
             />
           </div>
+
         </div>
       </motion.section>
 
