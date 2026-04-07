@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: '%s | Ife Adese'
   },
   description:
-    "I'm a software engineer. I've designed, built and tinkered with various kinds of websites across a variety of domains. My other hobbies and interests generally involve exploring all things creative media and digital design.",
+    "I'm a software engineer with a wide range of creative interests and hobbies. This site is my home base for documenting life—faith, career, business, and the things I'm learning along the way.",
 };
 
 const geist = Geist({

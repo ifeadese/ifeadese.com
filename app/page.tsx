@@ -201,10 +201,9 @@ export default function Personal() {
       >
         <div className="flex-1">
           <p className="text-zinc-600 dark:text-zinc-400">
-            I&apos;m a software engineer. I&apos;ve designed, built and tinkered
-            with various kinds of websites across a variety of domains. My other
-            hobbies and interests generally involve exploring all things
-            creative media and digital design.
+            I&apos;m a software engineer with a wide range of creative interests
+            and hobbies. This site is my home base for documenting life—faith,
+            career, business, and the things I&apos;m learning along the way.
           </p>
           <div className="mt-6">
             <Image
