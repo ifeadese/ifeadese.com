@@ -20,7 +20,8 @@ export const metadata: Metadata = {
     default: 'Ife Adese - Designer & Engineer',
     template: '%s | Ife Adese'
   },
-  description: "I make websites and graphic designs. Exploring all things creative media and digital design.",
+  description:
+    "I'm a software engineer. I've designed, built and tinkered with various kinds of websites across a variety of domains. My other hobbies and interests generally involve exploring all things creative media and digital design.",
 };
 
 const geist = Geist({
