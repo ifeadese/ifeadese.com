@@ -9,8 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@mdx-js/loader": "^3.0.1",
     "@mdx-js/react": "^3.0.1",
+    "@mui/material": "^9.0.1",
+    "@mui/x-charts": "^9.3.0",
     "@next/mdx": "^14.2.13",
     "@tailwindcss/typography": "^0.5.15",
     "@types/mdx": "^2.0.13",
