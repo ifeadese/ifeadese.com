@@ -308,7 +308,7 @@ export default function Personal() {
         variants={VARIANTS_SECTION}
         transition={TRANSITION_SECTION}
       >
-        <h3 className="mb-3 text-lg font-medium">Health</h3>
+        <h3 className="mb-3 text-lg font-medium">Runs</h3>
         <RunningDistanceChart />
       </motion.section>
 

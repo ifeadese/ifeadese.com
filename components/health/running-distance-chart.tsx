@@ -118,8 +118,6 @@ export function RunningDistanceChart() {
   const activeDistance = chartData.distances[activeIndex]
   const activeDate = chartData.dates[activeIndex]
   const activeDuration = chartData.durations[activeIndex]
-  const activePace =
-    activeDistance > 0 ? Number((activeDuration / activeDistance).toFixed(2)) : 0
 
   return (
     <div className="space-y-3">
@@ -139,11 +137,9 @@ export function RunningDistanceChart() {
         <div className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
           <span className="font-medium">{formatFullDate(activeDate)}</span>
           <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>{activeDistance.toFixed(1)} km</span>
+          <span>Distance: {activeDistance.toFixed(1)} km</span>
           <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>{formatDuration(activeDuration)}</span>
-          <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>{activePace.toFixed(2)} min/km</span>
+          <span>Time: {formatDuration(activeDuration)}</span>
         </div>
         <SparkLineChart
           height={220}
