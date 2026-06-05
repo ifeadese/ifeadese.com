@@ -82,11 +82,11 @@ export const PROJECTS: Project[] = [
 export const SOCIAL_LINKS: SocialLink[] = [
   {
     label: 'Github',
-    link: 'https://github.com/ifedaviid',
+    link: 'https://github.com/ifeadese',
   },
   {
     label: 'LinkedIn',
-    link: 'https://www.linkedin.com/in/ifedaviid/',
+    link: 'https://www.linkedin.com/in/ifeadese/',
   },
 ]
 
