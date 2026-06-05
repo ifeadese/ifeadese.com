@@ -19,6 +19,7 @@ import {
   EMAIL,
   SOCIAL_LINKS,
 } from './data'
+import { FEATURES } from '@/lib/constants'
 import dynamic from 'next/dynamic'
 
 const RunningDistanceChart = dynamic(
@@ -304,13 +305,15 @@ export default function Personal() {
         </div>
       </motion.section>
 
-      <motion.section
-        variants={VARIANTS_SECTION}
-        transition={TRANSITION_SECTION}
-      >
-        <h3 className="mb-3 text-lg font-medium">Runs</h3>
-        <RunningDistanceChart />
-      </motion.section>
+      {FEATURES.healthRunningChart && (
+        <motion.section
+          variants={VARIANTS_SECTION}
+          transition={TRANSITION_SECTION}
+        >
+          <h3 className="mb-3 text-lg font-medium">Runs</h3>
+          <RunningDistanceChart />
+        </motion.section>
+      )}
 
       <motion.section
         variants={VARIANTS_SECTION}
