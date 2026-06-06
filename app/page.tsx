@@ -19,6 +19,23 @@ import {
   EMAIL,
   SOCIAL_LINKS,
 } from './data'
+import { FEATURES } from '@/lib/constants'
+import dynamic from 'next/dynamic'
+
+const RunningDistanceChart = dynamic(
+  () =>
+    import('@/components/health/running-distance-chart').then(
+      (module) => module.RunningDistanceChart
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        Loading running chart...
+      </p>
+    ),
+  }
+)
 
 const VARIANTS_CONTAINER = {
   hidden: { opacity: 0 },
@@ -287,6 +304,16 @@ export default function Personal() {
           ))}
         </div>
       </motion.section>
+
+      {FEATURES.healthRunningChart && (
+        <motion.section
+          variants={VARIANTS_SECTION}
+          transition={TRANSITION_SECTION}
+        >
+          <h3 className="mb-3 text-lg font-medium">Runs</h3>
+          <RunningDistanceChart />
+        </motion.section>
+      )}
 
       <motion.section
         variants={VARIANTS_SECTION}
