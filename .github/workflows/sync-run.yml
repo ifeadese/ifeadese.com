@@ -1,8 +1,6 @@
 name: Sync Run Data
 
 on:
-  repository_dispatch:
-    types: [new_run]
   workflow_dispatch:
     inputs:
       date:
@@ -24,31 +22,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Append run entry
+      - name: Validate and append run entry
         run: |
-          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            DATE="${{ github.event.client_payload.date }}"
-            DISTANCE="${{ github.event.client_payload.distanceKm }}"
-            DURATION="${{ github.event.client_payload.durationMinutes }}"
-          else
-            DATE="${{ github.event.inputs.date }}"
-            DISTANCE="${{ github.event.inputs.distanceKm }}"
-            DURATION="${{ github.event.inputs.durationMinutes }}"
-          fi
+          DATE="${{ github.event.inputs.date }}"
+          DISTANCE="${{ github.event.inputs.distanceKm }}"
+          DURATION="${{ github.event.inputs.durationMinutes }}"
 
-          if [ -z "$DATE" ] || [ -z "$DISTANCE" ]; then
-            echo "Missing required fields: date and distanceKm"
+          # Validate date format
+          if ! echo "$DATE" | grep -qE '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'; then
+            echo "::error::Invalid date format. Use YYYY-MM-DD."
             exit 1
           fi
 
+          # Validate distance is a positive number
+          if ! echo "$DISTANCE" | grep -qE '^[0-9]+(\.[0-9]+)?$' || [ "$(echo "$DISTANCE <= 0" | bc)" -eq 1 ]; then
+            echo "::error::Distance must be a positive number."
+            exit 1
+          fi
+
+          # Validate duration if provided
+          if [ -n "$DURATION" ]; then
+            if ! echo "$DURATION" | grep -qE '^[0-9]+(\.[0-9]+)?$' || [ "$(echo "$DURATION <= 0" | bc)" -eq 1 ]; then
+              echo "::error::Duration must be a positive number."
+              exit 1
+            fi
+          fi
+
+          # Build entry
           ENTRY="{\"date\":\"$DATE\",\"distanceKm\":$DISTANCE"
           if [ -n "$DURATION" ]; then
             ENTRY="$ENTRY,\"durationMinutes\":$DURATION"
           fi
           ENTRY="$ENTRY,\"type\":\"run\",\"source\":\"manual\"}"
 
-          # Append entry and sort by date
-          jq --argjson entry "$ENTRY" '. + [$entry] | sort_by(.date)' public/data/runs.json > tmp.json
+          # Upsert: remove existing entry for same date, then add new one
+          jq --argjson entry "$ENTRY" '
+            [.[] | select(.date != $entry.date)] + [$entry] | sort_by(.date)
+          ' public/data/runs.json > tmp.json
           mv tmp.json public/data/runs.json
 
       - name: Commit and push if changed

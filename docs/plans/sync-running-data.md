@@ -35,12 +35,11 @@ Flat array, sorted by date:
 ### GitHub Action (`.github/workflows/sync-run.yml`)
 
 Triggers:
-- `workflow_dispatch` — manual input (primary method)
-- `repository_dispatch` type `new_run` — reserved for future automation
+- `workflow_dispatch` — manual input
 
-Inputs: date (required), distanceKm (required), durationMinutes (optional)
+Inputs: date (required, YYYY-MM-DD), distanceKm (required, positive number), durationMinutes (optional, positive number)
 
-Action: appends entry to `runs.json`, sorts by date, commits if changed.
+Behavior: validates inputs, upserts entry in `runs.json` (replaces existing entry for same date), sorts by date, commits if changed.
 
 ### Existing code (already built)
 
@@ -58,4 +57,4 @@ After a run:
 
 ## Future path
 
-If manual entry becomes tedious, automation can be layered on via `repository_dispatch` without changing the workflow or data format. Options: iOS Shortcut, Strava (if subscribed), or any service that can POST to the GitHub API.
+If manual entry becomes tedious, automation can be layered on via a new `repository_dispatch` trigger or a scheduled workflow without changing the data format. Options: iOS Shortcut, Strava (if subscribed), or any service that can POST to the GitHub API.
