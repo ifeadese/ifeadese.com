@@ -227,20 +227,24 @@ export function RunningDistanceChart() {
         onMouseLeave={() => setSelectedIndex(null)}
         onTouchStart={handleTouchStart}
       >
-        <div className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
+        <div className="mb-2 text-xs leading-5 text-zinc-600 dark:text-zinc-300 sm:leading-normal">
           <span className="font-medium">{formatFullDate(activeDate)}</span>
           {activeDistance > 0 ? (
             <>
-              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span className="mx-2 hidden text-zinc-400 dark:text-zinc-600 sm:inline">|</span>
+              <br className="sm:hidden" />
               <span>Distance: {activeDistance.toFixed(2)}km</span>
-              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span className="mx-2 hidden text-zinc-400 dark:text-zinc-600 sm:inline">|</span>
+              <br className="sm:hidden" />
               <span>Time: {formatTime(activeDuration)}</span>
-              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span className="mx-2 hidden text-zinc-400 dark:text-zinc-600 sm:inline">|</span>
+              <br className="sm:hidden" />
               <span>Pace: {formatPace(activeDuration, activeDistance)}</span>
             </>
           ) : (
             <>
-              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span className="mx-2 hidden text-zinc-400 dark:text-zinc-600 sm:inline">|</span>
+              <br className="sm:hidden" />
               <span>Rest day</span>
             </>
           )}
