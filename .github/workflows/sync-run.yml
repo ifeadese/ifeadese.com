@@ -15,6 +15,9 @@ on:
         description: 'Duration in minutes'
         required: false
 
+permissions:
+  contents: write
+
 jobs:
   append-run:
     runs-on: ubuntu-latest

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync": "npx tsx scripts/sync-strava.ts",
+    "strava:auth": "npx tsx scripts/strava-auth.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
