@@ -10,7 +10,9 @@ type RunningDataState =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: unknown }
 
-const BAR_MIN_WIDTH = 10
+const BAR_MIN_WIDTH_MOBILE = 16
+const BAR_MIN_WIDTH_DESKTOP = 10
+const MOBILE_BREAKPOINT = 640
 
 function formatFullDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
@@ -105,8 +107,9 @@ export function RunningDistanceChart() {
   }, [state])
 
   const dayCount = useMemo(() => {
-    if (!containerWidth) return 30
-    return Math.max(14, Math.floor(containerWidth / BAR_MIN_WIDTH))
+    if (!containerWidth) return 21
+    const barWidth = containerWidth < MOBILE_BREAKPOINT ? BAR_MIN_WIDTH_MOBILE : BAR_MIN_WIDTH_DESKTOP
+    return Math.max(14, Math.floor(containerWidth / barWidth))
   }, [containerWidth])
 
   const chartData = useMemo(() => {
@@ -146,6 +149,7 @@ export function RunningDistanceChart() {
   }, [normalized, dayCount])
 
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const isTouching = useRef(false)
 
   const getIndexFromX = useCallback(
     (clientX: number, rect: DOMRect) => {
@@ -159,14 +163,20 @@ export function RunningDistanceChart() {
 
   const handleMouseMove = useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
+      if (isTouching.current) return
       const idx = getIndexFromX(event.clientX, event.currentTarget.getBoundingClientRect())
       if (idx !== null) setSelectedIndex(idx)
     },
     [getIndexFromX]
   )
 
+  const handleMouseLeave = useCallback(() => {
+    if (!isTouching.current) setSelectedIndex(null)
+  }, [])
+
   const handleTouchStart = useCallback(
     (event: React.TouchEvent<HTMLDivElement>) => {
+      isTouching.current = true
       const touch = event.touches[0]
       const idx = getIndexFromX(touch.clientX, event.currentTarget.getBoundingClientRect())
       if (idx !== null) setSelectedIndex(idx)
@@ -224,7 +234,7 @@ export function RunningDistanceChart() {
         ref={containerRef}
         className="relative w-full"
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setSelectedIndex(null)}
+        onMouseLeave={handleMouseLeave}
         onTouchStart={handleTouchStart}
       >
         <div className="mb-2 text-xs leading-5 text-zinc-600 dark:text-zinc-300 sm:leading-normal">
@@ -245,7 +255,7 @@ export function RunningDistanceChart() {
             <>
               <span className="mx-2 hidden text-zinc-400 dark:text-zinc-600 sm:inline">|</span>
               <br className="sm:hidden" />
-              <span>Rest day</span>
+              <span>None</span>
             </>
           )}
         </div>
