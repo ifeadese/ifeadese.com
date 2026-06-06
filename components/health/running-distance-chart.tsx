@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { SparkLineChart } from '@mui/x-charts/SparkLineChart'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BarChart } from '@mui/x-charts/BarChart'
 import { useTheme } from 'next-themes'
 import { normalizeRunningData } from '@/lib/running-data'
 
@@ -10,7 +10,7 @@ type RunningDataState =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: unknown }
 
-const CHART_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 }
+const BAR_MIN_WIDTH = 10
 
 function formatFullDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
@@ -31,9 +31,33 @@ function formatDuration(minutes: number): string {
   return `${hours}h ${String(mins).padStart(2, '0')}m`
 }
 
+function useContainerWidth() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+
+    observer.observe(el)
+    setWidth(el.clientWidth)
+
+    return () => observer.disconnect()
+  }, [])
+
+  return { ref, width }
+}
+
 export function RunningDistanceChart() {
   const { resolvedTheme } = useTheme()
   const [state, setState] = useState<RunningDataState>({ status: 'loading' })
+  const { ref: containerRef, width: containerWidth } = useContainerWidth()
 
   useEffect(() => {
     let isMounted = true
@@ -74,6 +98,11 @@ export function RunningDistanceChart() {
     return normalizeRunningData(state.data)
   }, [state])
 
+  const dayCount = useMemo(() => {
+    if (!containerWidth) return 30
+    return Math.max(14, Math.floor(containerWidth / BAR_MIN_WIDTH))
+  }, [containerWidth])
+
   const chartData = useMemo(() => {
     if (!normalized || normalized.points.length === 0) return null
 
@@ -81,12 +110,10 @@ export function RunningDistanceChart() {
       normalized.points.map((p) => [p.date, p])
     )
 
-    const first = normalized.points[0].date
-    const last = normalized.points[normalized.points.length - 1].date
-    const [fy, fm, fd] = first.split('-').map(Number)
-    const [ly, lm, ld] = last.split('-').map(Number)
-    const startDate = new Date(Date.UTC(fy, fm - 1, fd))
-    const endDate = new Date(Date.UTC(ly, lm - 1, ld))
+    const now = new Date()
+    const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+    const startDate = new Date(endDate)
+    startDate.setUTCDate(startDate.getUTCDate() - dayCount + 1)
 
     const distances: number[] = []
     const dates: string[] = []
@@ -102,12 +129,35 @@ export function RunningDistanceChart() {
       current.setUTCDate(current.getUTCDate() + 1)
     }
 
-    return { distances, dates, durations }
-  }, [normalized])
+    const nonZero = distances.filter((d) => d > 0)
+    const minDistance = nonZero.length > 0 ? Math.min(...nonZero) : 0
+    const maxDistance = nonZero.length > 0 ? Math.max(...nonZero) : 1
+
+    const REST_DAY_HEIGHT = maxDistance * 0.04
+    const displayDistances = distances.map((d) => (d === 0 ? REST_DAY_HEIGHT : d))
+
+    return { distances, displayDistances, dates, durations, minDistance, maxDistance, restDayHeight: REST_DAY_HEIGHT }
+  }, [normalized, dayCount])
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  const barColor = resolvedTheme === 'dark' ? '#f4f4f5' : '#27272a'
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!chartData) return
+      const target = event.currentTarget.getBoundingClientRect()
+      if (!target.width || chartData.distances.length === 0) return
+
+      const x = event.clientX - target.left
+      const ratio = Math.min(Math.max(x / target.width, 0), 1)
+      const nextIndex = Math.round(ratio * (chartData.distances.length - 1))
+      setHoveredIndex(nextIndex)
+    },
+    [chartData]
+  )
+
+  const isDark = resolvedTheme === 'dark'
+  const colorMin = isDark ? '#52525b' : '#d4d4d8'
+  const colorMax = isDark ? '#4ade80' : '#16a34a'
 
   if (state.status === 'loading') {
     return (
@@ -143,16 +193,9 @@ export function RunningDistanceChart() {
   return (
     <div className="space-y-3">
       <div
+        ref={containerRef}
         className="relative w-full"
-        onMouseMove={(event) => {
-          const target = event.currentTarget.getBoundingClientRect()
-          if (!target.width || chartData.distances.length === 0) return
-
-          const x = event.clientX - target.left
-          const ratio = Math.min(Math.max(x / target.width, 0), 1)
-          const nextIndex = Math.round(ratio * (chartData.distances.length - 1))
-          setHoveredIndex(nextIndex)
-        }}
+        onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoveredIndex(null)}
       >
         <div className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
@@ -171,15 +214,42 @@ export function RunningDistanceChart() {
             </>
           )}
         </div>
-        <SparkLineChart
-          height={220}
-          data={chartData.distances}
-          plotType="bar"
-          color={barColor}
-          showHighlight
-          margin={CHART_MARGIN}
-          valueFormatter={(value) => `${Number(value ?? 0).toFixed(1)} km`}
-        />
+        <div className="border-b border-zinc-100 dark:border-zinc-800">
+          <BarChart
+            height={220}
+            series={[
+              {
+                data: chartData.displayDistances,
+                valueFormatter: (value) => `${Number(value ?? 0).toFixed(2)} km`,
+              },
+            ]}
+            yAxis={[
+              {
+                position: 'none',
+                colorMap: {
+                  type: 'continuous',
+                  min: chartData.restDayHeight,
+                  max: chartData.maxDistance,
+                  color: [colorMin, colorMax],
+                },
+              },
+            ]}
+            xAxis={[
+              {
+                scaleType: 'band',
+                data: chartData.dates,
+                position: 'none',
+              },
+            ]}
+            margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+            slotProps={{ tooltip: { trigger: 'none' } }}
+            sx={{
+              '& .MuiBarElement-root': {
+                rx: 2,
+              },
+            }}
+          />
+        </div>
       </div>
 
       {(normalized.invalidRowCount > 0 || normalized.futureRowCount > 0) && (
