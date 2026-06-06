@@ -37,7 +37,6 @@ const RunningDistanceChart = dynamic(
   }
 )
 
-
 const VARIANTS_CONTAINER = {
   hidden: { opacity: 0 },
   visible: {

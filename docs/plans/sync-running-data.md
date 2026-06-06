@@ -17,7 +17,7 @@ Running stats on ifeadese.com need to update after each run without requiring co
 ```
 User (after a run)
   → GitHub Actions UI (workflow_dispatch)
-    → Appends to public/data/runs.json, commits
+    → Validates input, upserts public/data/runs.json, commits
       → Vercel auto-deploys
 ```
 
