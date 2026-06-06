@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { SparkLineChart } from '@mui/x-charts/SparkLineChart'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { BarChart } from '@mui/x-charts/BarChart'
 import { useTheme } from 'next-themes'
 import { normalizeRunningData } from '@/lib/running-data'
 
@@ -10,7 +10,7 @@ type RunningDataState =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: unknown }
 
-const CHART_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 }
+const BAR_MIN_WIDTH = 10
 
 function formatFullDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
@@ -31,16 +31,40 @@ function formatDuration(minutes: number): string {
   return `${hours}h ${String(mins).padStart(2, '0')}m`
 }
 
+function useContainerWidth() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(0)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+
+    observer.observe(el)
+    setWidth(el.clientWidth)
+
+    return () => observer.disconnect()
+  }, [])
+
+  return { ref, width }
+}
+
 export function RunningDistanceChart() {
   const { resolvedTheme } = useTheme()
   const [state, setState] = useState<RunningDataState>({ status: 'loading' })
+  const { ref: containerRef, width: containerWidth } = useContainerWidth()
 
   useEffect(() => {
     let isMounted = true
 
     async function loadData() {
       try {
-        const response = await fetch('/data/runs-ytd.json')
+        const response = await fetch('/data/runs.json')
         if (!response.ok) {
           throw new Error(`Failed to load run data (${response.status})`)
         }
@@ -74,19 +98,71 @@ export function RunningDistanceChart() {
     return normalizeRunningData(state.data)
   }, [state])
 
+  const dayCount = useMemo(() => {
+    if (!containerWidth) return 30
+    return Math.max(14, Math.floor(containerWidth / BAR_MIN_WIDTH))
+  }, [containerWidth])
+
   const chartData = useMemo(() => {
-    if (!normalized) return null
+    if (!normalized || normalized.points.length === 0) return null
 
-    const distances = normalized.points.map((point) => point.distanceKm)
-    const dates = normalized.points.map((point) => point.date)
-    const durations = normalized.points.map((point) => point.durationMinutes)
+    const runsByDate = new Map(
+      normalized.points.map((p) => [p.date, p])
+    )
 
-    return { distances, dates, durations }
-  }, [normalized])
+    const now = new Date()
+    const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+    const startDate = new Date(endDate)
+    startDate.setUTCDate(startDate.getUTCDate() - dayCount + 1)
+
+    const distances: number[] = []
+    const dates: string[] = []
+    const durations: number[] = []
+
+    const current = new Date(startDate)
+    while (current <= endDate) {
+      const key = current.toISOString().split('T')[0]
+      const run = runsByDate.get(key)
+      distances.push(run ? run.distanceKm : 0)
+      dates.push(key)
+      durations.push(run ? run.durationMinutes : 0)
+      current.setUTCDate(current.getUTCDate() + 1)
+    }
+
+    const nonZero = distances.filter((d) => d > 0)
+    const minDistance = nonZero.length > 0 ? Math.min(...nonZero) : 0
+    const maxDistance = nonZero.length > 0 ? Math.max(...nonZero) : 1
+
+    const REST_DAY_HEIGHT = maxDistance * 0.04
+    const displayDistances = distances.map((d) => (d === 0 ? REST_DAY_HEIGHT : d))
+
+    return { distances, displayDistances, dates, durations, minDistance, maxDistance, restDayHeight: REST_DAY_HEIGHT }
+  }, [normalized, dayCount])
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
-  const barColor = resolvedTheme === 'dark' ? '#f4f4f5' : '#27272a'
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (!chartData) return
+      const target = event.currentTarget.getBoundingClientRect()
+      if (!target.width || chartData.distances.length === 0) return
+
+      const x = event.clientX - target.left
+      const ratio = Math.min(Math.max(x / target.width, 0), 1)
+      const nextIndex = Math.round(ratio * (chartData.distances.length - 1))
+      setHoveredIndex(nextIndex)
+    },
+    [chartData]
+  )
+
+  const isDark = resolvedTheme === 'dark'
+  const restDayColor = isDark ? 'rgba(82, 82, 91, 0.3)' : 'rgba(212, 212, 216, 0.3)'
+
+  const interpolateColor = (t: number): string => {
+    if (t < 0.01) return restDayColor
+    const light = isDark ? Math.round(63 + t * 187) : Math.round(228 - t * 204)
+    return `rgb(${light}, ${light}, ${light})`
+  }
 
   if (state.status === 'loading') {
     return (
@@ -122,34 +198,63 @@ export function RunningDistanceChart() {
   return (
     <div className="space-y-3">
       <div
+        ref={containerRef}
         className="relative w-full"
-        onMouseMove={(event) => {
-          const target = event.currentTarget.getBoundingClientRect()
-          if (!target.width || chartData.distances.length === 0) return
-
-          const x = event.clientX - target.left
-          const ratio = Math.min(Math.max(x / target.width, 0), 1)
-          const nextIndex = Math.round(ratio * (chartData.distances.length - 1))
-          setHoveredIndex(nextIndex)
-        }}
+        onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoveredIndex(null)}
       >
         <div className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
           <span className="font-medium">{formatFullDate(activeDate)}</span>
-          <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>Distance: {activeDistance.toFixed(1)} km</span>
-          <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>Time: {formatDuration(activeDuration)}</span>
+          {activeDistance > 0 ? (
+            <>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Distance: {activeDistance.toFixed(2)} km</span>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Time: {formatDuration(activeDuration)}</span>
+            </>
+          ) : (
+            <>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Rest day</span>
+            </>
+          )}
         </div>
-        <SparkLineChart
-          height={220}
-          data={chartData.distances}
-          plotType="bar"
-          color={barColor}
-          showHighlight
-          margin={CHART_MARGIN}
-          valueFormatter={(value) => `${Number(value ?? 0).toFixed(1)} km`}
-        />
+        <div className="border-b border-zinc-100 dark:border-zinc-800">
+          <BarChart
+            height={220}
+            series={[
+              {
+                data: chartData.displayDistances,
+                valueFormatter: (value) => `${Number(value ?? 0).toFixed(2)} km`,
+              },
+            ]}
+            yAxis={[
+              {
+                position: 'none',
+                colorMap: {
+                  type: 'continuous',
+                  min: 0,
+                  max: chartData.maxDistance,
+                  color: interpolateColor,
+                },
+              },
+            ]}
+            xAxis={[
+              {
+                scaleType: 'band',
+                data: chartData.dates,
+                position: 'none',
+              },
+            ]}
+            margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+            slotProps={{ tooltip: { trigger: 'none' } }}
+            sx={{
+              '& .MuiBarElement-root': {
+                rx: 2,
+              },
+            }}
+          />
+        </div>
       </div>
 
       {(normalized.invalidRowCount > 0 || normalized.futureRowCount > 0) && (

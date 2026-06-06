@@ -1,0 +1,73 @@
+name: Sync Run Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Run date (YYYY-MM-DD)'
+        required: true
+      distanceKm:
+        description: 'Distance in km'
+        required: true
+      durationMinutes:
+        description: 'Duration in minutes'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  append-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate and append run entry
+        run: |
+          DATE="${{ github.event.inputs.date }}"
+          DISTANCE="${{ github.event.inputs.distanceKm }}"
+          DURATION="${{ github.event.inputs.durationMinutes }}"
+
+          # Validate date format and calendar validity
+          if ! echo "$DATE" | grep -qE '^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'; then
+            echo "::error::Invalid date format. Use YYYY-MM-DD."
+            exit 1
+          fi
+          if ! date -d "$DATE" +%Y-%m-%d 2>/dev/null | grep -qx "$DATE"; then
+            echo "::error::Invalid calendar date: $DATE does not exist."
+            exit 1
+          fi
+
+          # Validate distance is a positive number
+          if ! echo "$DISTANCE" | grep -qE '^[0-9]+(\.[0-9]+)?$' || [ "$(echo "$DISTANCE <= 0" | bc)" -eq 1 ]; then
+            echo "::error::Distance must be a positive number."
+            exit 1
+          fi
+
+          # Validate duration if provided
+          if [ -n "$DURATION" ]; then
+            if ! echo "$DURATION" | grep -qE '^[0-9]+(\.[0-9]+)?$' || [ "$(echo "$DURATION <= 0" | bc)" -eq 1 ]; then
+              echo "::error::Duration must be a positive number."
+              exit 1
+            fi
+          fi
+
+          # Build entry
+          ENTRY="{\"date\":\"$DATE\",\"distanceKm\":$DISTANCE"
+          if [ -n "$DURATION" ]; then
+            ENTRY="$ENTRY,\"durationMinutes\":$DURATION"
+          fi
+          ENTRY="$ENTRY,\"type\":\"run\",\"source\":\"manual\"}"
+
+          # Upsert: remove existing entry for same date, then add new one
+          jq --argjson entry "$ENTRY" '
+            [.[] | select(.date != $entry.date)] + [$entry] | sort_by(.date)
+          ' public/data/runs.json > tmp.json
+          mv tmp.json public/data/runs.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/runs.json
+          git diff --staged --quiet || (git commit -m "chore(data): add run entry" && git push)

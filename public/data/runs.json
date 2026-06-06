@@ -1,0 +1,7 @@
+[
+  { "date": "2026-05-13", "distanceKm": 1.00, "durationMinutes": 5.62, "type": "run", "source": "manual" },
+  { "date": "2026-05-18", "distanceKm": 1.03, "durationMinutes": 6.02, "type": "run", "source": "manual" },
+  { "date": "2026-05-20", "distanceKm": 1.07, "durationMinutes": 6.35, "type": "run", "source": "manual" },
+  { "date": "2026-05-25", "distanceKm": 1.24, "durationMinutes": 6.82, "type": "run", "source": "manual" },
+  { "date": "2026-05-27", "distanceKm": 1.42, "durationMinutes": 7.70, "type": "run", "source": "manual" }
+]
