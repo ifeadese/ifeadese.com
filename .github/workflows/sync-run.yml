@@ -1,0 +1,56 @@
+name: Sync Run Data
+
+on:
+  repository_dispatch:
+    types: [new_run]
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Run date (YYYY-MM-DD)'
+        required: true
+      distanceKm:
+        description: 'Distance in km'
+        required: true
+      durationMinutes:
+        description: 'Duration in minutes'
+        required: false
+
+jobs:
+  append-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Append run entry
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            DATE="${{ github.event.client_payload.date }}"
+            DISTANCE="${{ github.event.client_payload.distanceKm }}"
+            DURATION="${{ github.event.client_payload.durationMinutes }}"
+          else
+            DATE="${{ github.event.inputs.date }}"
+            DISTANCE="${{ github.event.inputs.distanceKm }}"
+            DURATION="${{ github.event.inputs.durationMinutes }}"
+          fi
+
+          if [ -z "$DATE" ] || [ -z "$DISTANCE" ]; then
+            echo "Missing required fields: date and distanceKm"
+            exit 1
+          fi
+
+          ENTRY="{\"date\":\"$DATE\",\"distanceKm\":$DISTANCE"
+          if [ -n "$DURATION" ]; then
+            ENTRY="$ENTRY,\"durationMinutes\":$DURATION"
+          fi
+          ENTRY="$ENTRY,\"type\":\"run\",\"source\":\"apple_health\"}"
+
+          # Append entry and sort by date
+          jq --argjson entry "$ENTRY" '. + [$entry] | sort_by(.date)' public/data/runs.json > tmp.json
+          mv tmp.json public/data/runs.json
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/runs.json
+          git diff --staged --quiet || (git commit -m "chore(data): add run from Apple Health" && git push)
