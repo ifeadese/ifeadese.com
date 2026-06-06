@@ -37,13 +37,6 @@ const RunningDistanceChart = dynamic(
   }
 )
 
-const JourneyStats = dynamic(
-  () =>
-    import('@/components/health/journey-stats').then(
-      (module) => module.JourneyStats
-    ),
-  { ssr: false }
-)
 
 const VARIANTS_CONTAINER = {
   hidden: { opacity: 0 },
@@ -319,7 +312,6 @@ export default function Personal() {
           transition={TRANSITION_SECTION}
         >
           <h3 className="mb-3 text-lg font-medium">Runs</h3>
-          <JourneyStats />
           <RunningDistanceChart />
         </motion.section>
       )}
