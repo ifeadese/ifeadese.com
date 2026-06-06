@@ -10,8 +10,8 @@ type RunningDataState =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: unknown }
 
-const BAR_MIN_WIDTH_MOBILE = 16
-const BAR_MIN_WIDTH_DESKTOP = 10
+const BAR_MIN_WIDTH_MOBILE = 20
+const BAR_MIN_WIDTH_DESKTOP = 8
 const MOBILE_BREAKPOINT = 640
 
 function formatFullDate(isoDate: string): string {
