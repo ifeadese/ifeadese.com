@@ -156,8 +156,14 @@ export function RunningDistanceChart() {
   )
 
   const isDark = resolvedTheme === 'dark'
-  const colorMin = isDark ? '#52525b' : '#d4d4d8'
-  const colorMax = isDark ? '#4ade80' : '#16a34a'
+
+  const interpolateColor = (t: number): string => {
+    const r = t < 0.5 ? 220 : Math.round(220 - (t - 0.5) * 2 * 180)
+    const g = t < 0.5 ? Math.round(60 + t * 2 * 160) : 220
+    const b = 60
+    const opacity = isDark ? 0.9 : 0.85
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`
+  }
 
   if (state.status === 'loading') {
     return (
@@ -230,7 +236,7 @@ export function RunningDistanceChart() {
                   type: 'continuous',
                   min: chartData.restDayHeight,
                   max: chartData.maxDistance,
-                  color: [colorMin, colorMax],
+                  color: interpolateColor,
                 },
               },
             ]}
