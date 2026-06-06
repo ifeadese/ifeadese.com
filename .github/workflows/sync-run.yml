@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       date:
-        description: 'Run date (YYYY-MM-DD)'
+        description: 'Run date (e.g. "2026-06-05")'
         required: true
       distanceKm:
-        description: 'Distance in km'
+        description: 'Distance in km (e.g. "1.42")'
         required: true
       durationMinutes:
-        description: 'Duration in minutes'
+        description: 'Duration in minutes (e.g. "7.70")'
         required: false
 
 permissions:
