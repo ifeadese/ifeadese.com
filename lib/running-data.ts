@@ -2,6 +2,8 @@ export type RawRunEntry = {
   date: string
   distanceKm: number
   durationMinutes?: number
+  type?: string
+  source?: string
 }
 
 export type NormalizedRunEntry = {

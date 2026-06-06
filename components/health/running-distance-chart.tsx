@@ -40,7 +40,7 @@ export function RunningDistanceChart() {
 
     async function loadData() {
       try {
-        const response = await fetch('/data/runs-ytd.json')
+        const response = await fetch('/data/runs.json')
         if (!response.ok) {
           throw new Error(`Failed to load run data (${response.status})`)
         }
