@@ -10,8 +10,8 @@ type RunningDataState =
   | { status: 'error'; message: string }
   | { status: 'ready'; data: unknown }
 
-const BAR_MIN_WIDTH_MOBILE = 26
-const BAR_MIN_WIDTH_DESKTOP = 6
+const DAYS_MOBILE = 14
+const DAYS_DESKTOP = 30
 const MOBILE_BREAKPOINT = 500
 
 function formatFullDate(isoDate: string): string {
@@ -107,9 +107,8 @@ export function RunningDistanceChart() {
   }, [state])
 
   const dayCount = useMemo(() => {
-    if (!containerWidth) return 21
-    const barWidth = containerWidth < MOBILE_BREAKPOINT ? BAR_MIN_WIDTH_MOBILE : BAR_MIN_WIDTH_DESKTOP
-    return Math.max(14, Math.floor(containerWidth / barWidth))
+    if (!containerWidth) return DAYS_DESKTOP
+    return containerWidth < MOBILE_BREAKPOINT ? DAYS_MOBILE : DAYS_DESKTOP
   }, [containerWidth])
 
   const chartData = useMemo(() => {
