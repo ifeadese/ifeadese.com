@@ -75,11 +75,32 @@ export function RunningDistanceChart() {
   }, [state])
 
   const chartData = useMemo(() => {
-    if (!normalized) return null
+    if (!normalized || normalized.points.length === 0) return null
 
-    const distances = normalized.points.map((point) => point.distanceKm)
-    const dates = normalized.points.map((point) => point.date)
-    const durations = normalized.points.map((point) => point.durationMinutes)
+    const runsByDate = new Map(
+      normalized.points.map((p) => [p.date, p])
+    )
+
+    const first = normalized.points[0].date
+    const last = normalized.points[normalized.points.length - 1].date
+    const [fy, fm, fd] = first.split('-').map(Number)
+    const [ly, lm, ld] = last.split('-').map(Number)
+    const startDate = new Date(Date.UTC(fy, fm - 1, fd))
+    const endDate = new Date(Date.UTC(ly, lm - 1, ld))
+
+    const distances: number[] = []
+    const dates: string[] = []
+    const durations: number[] = []
+
+    const current = new Date(startDate)
+    while (current <= endDate) {
+      const key = current.toISOString().split('T')[0]
+      const run = runsByDate.get(key)
+      distances.push(run ? run.distanceKm : 0)
+      dates.push(key)
+      durations.push(run ? run.durationMinutes : 0)
+      current.setUTCDate(current.getUTCDate() + 1)
+    }
 
     return { distances, dates, durations }
   }, [normalized])
@@ -136,10 +157,19 @@ export function RunningDistanceChart() {
       >
         <div className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
           <span className="font-medium">{formatFullDate(activeDate)}</span>
-          <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>Distance: {activeDistance.toFixed(1)} km</span>
-          <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-          <span>Time: {formatDuration(activeDuration)}</span>
+          {activeDistance > 0 ? (
+            <>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Distance: {activeDistance.toFixed(2)} km</span>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Time: {formatDuration(activeDuration)}</span>
+            </>
+          ) : (
+            <>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Rest day</span>
+            </>
+          )}
         </div>
         <SparkLineChart
           height={220}
