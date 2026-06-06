@@ -1,78 +1,61 @@
-# Plan: Auto-sync running stats via Apple Health Shortcut
+# Plan: Auto-sync running stats
 
 ## Context
 
-Running stats on ifeadese.com need to auto-update after each run. Originally planned for Strava, but that requires a paid subscription (~$100/yr). Pivoting to an Apple Health Shortcut approach that's free, automatic, and equally reliable.
+Running stats on ifeadese.com need to update after each run without requiring code changes. Evaluated three approaches — Strava API, Apple Health iOS Shortcut, and GitHub Actions manual dispatch — chose manual dispatch for its reliability and zero maintenance cost.
 
-**How it works:** Finish a run on Apple Watch → iOS Shortcut triggers on workout end → sends run data to GitHub API → GitHub Action updates `runs.json` and commits → Vercel auto-deploys.
+## Decision summary
+
+| Approach | Verdict | Reason |
+|----------|---------|--------|
+| Strava API | Rejected | Requires paid subscription (~$100/yr) |
+| Apple Health Shortcut | Rejected | Fragile (token expiry, manual wiring, iOS update risk, silent failures) |
+| GitHub Actions workflow_dispatch | Chosen | Zero setup, zero cost, zero failure modes, 30 seconds per run |
 
 ## Architecture
 
 ```
-Apple Watch (workout ends)
-  → iOS Shortcut (triggers automatically)
-    → GitHub API (repository_dispatch)
-      → GitHub Action (appends to runs.json, commits)
-        → Vercel (auto-deploys)
+User (after a run)
+  → GitHub Actions UI (workflow_dispatch)
+    → Appends to public/data/runs.json, commits
+      → Vercel auto-deploys
 ```
-
-## What's already done
-
-- Schema evolution: `runs-ytd.json` → `runs.json` with `type`/`source` fields
-- `lib/running-data.ts` extended with `type?` and `source?`
-- Chart fetch path updated to `/data/runs.json`
-- 76 entries backfilled with `type: "run"`, `source: "manual"`
-- Feature flag enabled
 
 ## Implementation
 
-### GitHub Action (`.github/workflows/sync-run.yml`)
+### Data schema (`public/data/runs.json`)
 
-Receives a `repository_dispatch` event with workout payload, appends to `runs.json`, commits.
-
-Triggers:
-- `repository_dispatch` type `new_run` — fired by iOS Shortcut
-- `workflow_dispatch` with manual inputs — for backfill/testing
-
-Payload shape:
+Flat array, sorted by date:
 ```json
-{
-  "event_type": "new_run",
-  "client_payload": {
-    "date": "2026-06-05",
-    "distanceKm": 5.2,
-    "durationMinutes": 32.1
-  }
-}
+[
+  { "date": "2026-06-05", "distanceKm": 5.2, "durationMinutes": 32.1, "type": "run", "source": "manual" }
+]
 ```
 
-### iOS Shortcut (user sets up on phone)
+### GitHub Action (`.github/workflows/sync-run.yml`)
 
-Automation trigger: **Apple Watch Workout → End → Type: Running**
+Triggers:
+- `workflow_dispatch` — manual input (primary method)
+- `repository_dispatch` type `new_run` — reserved for future automation
 
-Steps:
-1. Get last workout details (distance in km, duration in minutes)
-2. Format date as YYYY-MM-DD
-3. POST to `https://api.github.com/repos/ifeadese/ifeadese.com/dispatches`
-   - Header: `Authorization: Bearer <GITHUB_PAT>`
-   - Body: `{ "event_type": "new_run", "client_payload": { "date": "...", "distanceKm": ..., "durationMinutes": ... } }`
+Inputs: date (required), distanceKm (required), durationMinutes (optional)
 
-## Setup (one-time, manual)
+Action: appends entry to `runs.json`, sorts by date, commits if changed.
 
-1. Create a GitHub Personal Access Token (fine-grained, repo-scoped, contents:write)
-2. Create iOS Shortcut automation (trigger: workout end, type: running)
-3. Configure the Shortcut with the PAT and repo dispatch URL
+### Existing code (already built)
 
-## Design decisions
+- `lib/running-data.ts` — types and normalization
+- `components/health/running-distance-chart.tsx` — renders chart from `/data/runs.json`
+- `lib/constants.ts` — feature flag (`FEATURES.healthRunningChart`)
 
-- **No Strava** — requires paid subscription, Apple Health Shortcut is free and instant
-- **No sync script** — GitHub Action handles the append inline (simpler)
-- **source: "apple_health"** — distinguishes automated entries from manual backfill
-- **repository_dispatch** — standard GitHub pattern for external triggers
-- **Manual backfill** — add entries directly to `runs.json` with `source: "manual"`
+## Usage
 
-## Verification
+After a run:
+1. Go to repo → **Actions** tab → "Sync Run Data"
+2. Click **Run workflow**
+3. Enter: date (`2026-06-05`), distanceKm (`5.2`), optionally durationMinutes (`32`)
+4. Site auto-updates via Vercel deploy
 
-1. Trigger `workflow_dispatch` manually with test data → confirm `runs.json` updates
-2. Run `npm run dev` → confirm chart renders with new entry
-3. Set up iOS Shortcut → do a test walk/run → confirm end-to-end flow
+## Future path
+
+If manual entry becomes tedious, automation can be layered on via `repository_dispatch` without changing the workflow or data format. Options: iOS Shortcut, Strava (if subscribed), or any service that can POST to the GitHub API.
