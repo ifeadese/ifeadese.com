@@ -23,12 +23,18 @@ function formatFullDate(isoDate: string): string {
   }).format(new Date(Date.UTC(year, month - 1, day)))
 }
 
-function formatDuration(minutes: number): string {
-  const totalMinutes = Math.round(minutes)
-  const hours = Math.floor(totalMinutes / 60)
-  const mins = totalMinutes % 60
-  if (hours === 0) return `${mins}m`
-  return `${hours}h ${String(mins).padStart(2, '0')}m`
+function formatTime(minutes: number): string {
+  const totalSeconds = Math.round(minutes * 60)
+  const mins = Math.floor(totalSeconds / 60)
+  const secs = totalSeconds % 60
+  return `${mins}m ${secs}s`
+}
+
+function formatPace(minutes: number, distanceKm: number): string {
+  const paceMin = minutes / distanceKm
+  const paceMins = Math.floor(paceMin)
+  const paceSecs = Math.round((paceMin - paceMins) * 60)
+  return `${paceMins}:${String(paceSecs).padStart(2, '0')}/km`
 }
 
 function useContainerWidth() {
@@ -139,30 +145,47 @@ export function RunningDistanceChart() {
     return { distances, displayDistances, dates, durations, minDistance, maxDistance, restDayHeight: REST_DAY_HEIGHT }
   }, [normalized, dayCount])
 
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
 
-  const handleMouseMove = useCallback(
-    (event: React.MouseEvent<HTMLDivElement>) => {
-      if (!chartData) return
-      const target = event.currentTarget.getBoundingClientRect()
-      if (!target.width || chartData.distances.length === 0) return
-
-      const x = event.clientX - target.left
-      const ratio = Math.min(Math.max(x / target.width, 0), 1)
-      const nextIndex = Math.round(ratio * (chartData.distances.length - 1))
-      setHoveredIndex(nextIndex)
+  const getIndexFromX = useCallback(
+    (clientX: number, rect: DOMRect) => {
+      if (!chartData || !rect.width || chartData.distances.length === 0) return null
+      const x = clientX - rect.left
+      const ratio = Math.min(Math.max(x / rect.width, 0), 1)
+      return Math.round(ratio * (chartData.distances.length - 1))
     },
     [chartData]
   )
 
+  const handleMouseMove = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      const idx = getIndexFromX(event.clientX, event.currentTarget.getBoundingClientRect())
+      if (idx !== null) setSelectedIndex(idx)
+    },
+    [getIndexFromX]
+  )
+
+  const handleTouchStart = useCallback(
+    (event: React.TouchEvent<HTMLDivElement>) => {
+      const touch = event.touches[0]
+      const idx = getIndexFromX(touch.clientX, event.currentTarget.getBoundingClientRect())
+      if (idx !== null) setSelectedIndex(idx)
+    },
+    [getIndexFromX]
+  )
+
   const isDark = resolvedTheme === 'dark'
   const restDayColor = isDark ? 'rgba(82, 82, 91, 0.3)' : 'rgba(212, 212, 216, 0.3)'
+  const highlightColor = isDark ? '#fafafa' : '#18181b'
 
-  const interpolateColor = (t: number): string => {
-    if (t < 0.01) return restDayColor
-    const light = isDark ? Math.round(63 + t * 187) : Math.round(228 - t * 204)
-    return `rgb(${light}, ${light}, ${light})`
-  }
+  const interpolateColor = useCallback(
+    (t: number): string => {
+      if (t < 0.01) return restDayColor
+      const light = isDark ? Math.round(63 + t * 187) : Math.round(228 - t * 204)
+      return `rgb(${light}, ${light}, ${light})`
+    },
+    [isDark, restDayColor]
+  )
 
   if (state.status === 'loading') {
     return (
@@ -187,9 +210,9 @@ export function RunningDistanceChart() {
   }
 
   const activeIndex =
-    hoveredIndex === null
+    selectedIndex === null
       ? chartData.distances.length - 1
-      : Math.min(Math.max(hoveredIndex, 0), chartData.distances.length - 1)
+      : Math.min(Math.max(selectedIndex, 0), chartData.distances.length - 1)
 
   const activeDistance = chartData.distances[activeIndex]
   const activeDate = chartData.dates[activeIndex]
@@ -201,16 +224,19 @@ export function RunningDistanceChart() {
         ref={containerRef}
         className="relative w-full"
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoveredIndex(null)}
+        onMouseLeave={() => setSelectedIndex(null)}
+        onTouchStart={handleTouchStart}
       >
         <div className="mb-2 text-xs text-zinc-600 dark:text-zinc-300">
           <span className="font-medium">{formatFullDate(activeDate)}</span>
           {activeDistance > 0 ? (
             <>
               <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-              <span>Distance: {activeDistance.toFixed(2)} km</span>
+              <span>Distance: {activeDistance.toFixed(2)}km</span>
               <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
-              <span>Time: {formatDuration(activeDuration)}</span>
+              <span>Time: {formatTime(activeDuration)}</span>
+              <span className="mx-2 text-zinc-400 dark:text-zinc-600">|</span>
+              <span>Pace: {formatPace(activeDuration, activeDistance)}</span>
             </>
           ) : (
             <>
@@ -225,7 +251,7 @@ export function RunningDistanceChart() {
             series={[
               {
                 data: chartData.displayDistances,
-                valueFormatter: (value) => `${Number(value ?? 0).toFixed(2)} km`,
+                valueFormatter: (value) => `${Number(value ?? 0).toFixed(2)}km`,
               },
             ]}
             yAxis={[
@@ -251,7 +277,16 @@ export function RunningDistanceChart() {
             sx={{
               '& .MuiBarElement-root': {
                 rx: 2,
+                transition: 'opacity 0.15s',
               },
+              ...(selectedIndex !== null && {
+                [`& .MuiBarElement-root:not(:nth-of-type(${activeIndex + 1}))`]: {
+                  opacity: 0.4,
+                },
+                [`& .MuiBarElement-root:nth-of-type(${activeIndex + 1})`]: {
+                  fill: highlightColor,
+                },
+              }),
             }}
           />
         </div>
