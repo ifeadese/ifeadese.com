@@ -12,7 +12,7 @@ type RunningDataState =
 
 const BAR_MIN_WIDTH_MOBILE = 26
 const BAR_MIN_WIDTH_DESKTOP = 6
-const MOBILE_BREAKPOINT = 640
+const MOBILE_BREAKPOINT = 500
 
 function formatFullDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number)
