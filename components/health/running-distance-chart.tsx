@@ -176,7 +176,7 @@ export function RunningDistanceChart() {
 
   const isDark = resolvedTheme === 'dark'
   const restDayColor = isDark ? 'rgba(82, 82, 91, 0.3)' : 'rgba(212, 212, 216, 0.3)'
-  const highlightColor = isDark ? '#fafafa' : '#18181b'
+  const highlightColor = isDark ? '#60a5fa' : '#2563eb'
 
   const interpolateColor = useCallback(
     (t: number): string => {
@@ -248,6 +248,7 @@ export function RunningDistanceChart() {
         <div className="border-b border-zinc-100 dark:border-zinc-800">
           <BarChart
             height={220}
+            renderer="svg-single"
             series={[
               {
                 data: chartData.displayDistances,
@@ -275,16 +276,17 @@ export function RunningDistanceChart() {
             margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
             slotProps={{ tooltip: { trigger: 'none' } }}
             sx={{
-              '& .MuiBarElement-root': {
+              '& .MuiBarChart-element': {
                 rx: 2,
                 transition: 'opacity 0.15s',
               },
               ...(selectedIndex !== null && {
-                [`& .MuiBarElement-root:not(:nth-of-type(${activeIndex + 1}))`]: {
+                '& .MuiBarChart-series .MuiBarChart-element': {
                   opacity: 0.4,
                 },
-                [`& .MuiBarElement-root:nth-of-type(${activeIndex + 1})`]: {
-                  fill: highlightColor,
+                [`& .MuiBarChart-series .MuiBarChart-element:nth-of-type(${activeIndex + 1})`]: {
+                  opacity: 1,
+                  fill: `${highlightColor} !important`,
                 },
               }),
             }}
