@@ -40,5 +40,12 @@
     "durationMinutes": 8.14,
     "type": "run",
     "source": "manual"
+  },
+  {
+    "date": "2026-06-08",
+    "distanceKm": 1.56,
+    "durationMinutes": 6.06,
+    "type": "run",
+    "source": "manual"
   }
 ]
