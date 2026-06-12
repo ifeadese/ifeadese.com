@@ -50,6 +50,13 @@
   },
   {
     "date": "2026-06-10",
+    "distanceKm": 1.62,
+    "durationMinutes": 10.18,
+    "type": "run",
+    "source": "manual"
+  },
+  {
+    "date": "2026-06-12",
     "distanceKm": 1.79,
     "durationMinutes": 9.55,
     "type": "run",
