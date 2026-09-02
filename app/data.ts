@@ -64,6 +64,13 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
 export const PROJECTS: Project[] = [
 
   {
+    title: 'Lighthouse Church Ottawa',
+    description:
+      'A website rebuild for a multi-campus church in Ottawa.',
+    link: '/projects/lighthouse-church-ottawa',
+    uid: 'project-3',
+  },
+  {
     title: 'Galentines 2026: The Love of God Conference',
     description:
       'A website for an annual Christian women\'s conference in Ottawa.',
@@ -76,13 +83,6 @@ export const PROJECTS: Project[] = [
       'A mobile app design to help churches engage with newcomers.',
     link: '/projects/church-guest-engagement',
     uid: 'project-2',
-  },
-  {
-    title: 'Lighthouse Church Ottawa',
-    description:
-      'A website rebuild for a multi-campus church in Ottawa.',
-    link: '/projects/lighthouse-church-ottawa',
-    uid: 'project-3',
   }
 ]
 
