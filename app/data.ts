@@ -76,6 +76,13 @@ export const PROJECTS: Project[] = [
       'A mobile app design to help churches engage with newcomers.',
     link: '/projects/church-guest-engagement',
     uid: 'project-2',
+  },
+  {
+    title: 'Lighthouse Church Ottawa',
+    description:
+      'A website rebuild for a multi-campus church in Ottawa.',
+    link: '/projects/lighthouse-church-ottawa',
+    uid: 'project-3',
   }
 ]
 
