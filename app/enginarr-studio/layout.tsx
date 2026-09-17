@@ -4,7 +4,7 @@ import { ArrowLeftIcon, CheckIcon, CopyIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-// Keep service toolbar typography aligned with the main Header subtitle styling
+// Keep studio toolbar typography aligned with the main Header subtitle styling
 const TOOLBAR_BUTTON_CLASSNAME =
   'inline-flex cursor-pointer items-center gap-1 text-base font-normal text-zinc-600 transition-colors hover:text-zinc-800 dark:text-zinc-500 dark:hover:text-zinc-300'
 
@@ -62,7 +62,7 @@ function CopyButton() {
   )
 }
 
-export default function LayoutService({
+export default function LayoutEnginarrStudio({
   children,
 }: {
   children: React.ReactNode

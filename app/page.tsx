@@ -2,7 +2,6 @@
 import { motion } from 'motion/react'
 import { XIcon } from 'lucide-react'
 import { Spotlight } from '@/components/ui/spotlight'
-import { Magnetic } from '@/components/ui/magnetic'
 import {
   MorphingDialog,
   MorphingDialogTrigger,
@@ -12,20 +11,14 @@ import {
 } from '@/components/ui/morphing-dialog'
 import Link from 'next/link'
 import Image from 'next/image'
-import {
-  SERVICES,
-  WORK_EXPERIENCE,
-  PROJECTS,
-  EMAIL,
-  SOCIAL_LINKS,
-} from './data'
+import { WORK_EXPERIENCE, PROJECTS, EMAIL, SOCIAL_LINKS } from './data'
 import { FEATURES } from '@/lib/constants'
 import dynamic from 'next/dynamic'
 
 const RunningDistanceChart = dynamic(
   () =>
     import('@/components/health/running-distance-chart').then(
-      (module) => module.RunningDistanceChart
+      (module) => module.RunningDistanceChart,
     ),
   {
     ssr: false,
@@ -34,7 +27,7 @@ const RunningDistanceChart = dynamic(
         Loading running chart...
       </p>
     ),
-  }
+  },
 )
 
 const VARIANTS_CONTAINER = {
@@ -133,74 +126,102 @@ function ProjectMedia({ video, image }: ProjectMediaProps) {
   )
 }
 
-function MagneticSocialLink({
-  children,
-  link,
-}: {
-  children: React.ReactNode
-  link: string
-}) {
+/**
+ * Contact icons: 18px, drawn in currentColor, matching the outlined 1.6-stroke
+ * set used in the Credom footer so both sites share one icon language.
+ */
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.6,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': true,
+  className: 'h-[18px] w-[18px] shrink-0',
+} as const
+
+function MailIcon() {
   return (
-    <Magnetic springOptions={{ bounce: 0 }} intensity={0.3}>
-      <a
-        href={link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group relative inline-flex shrink-0 items-center gap-[1px] rounded-full bg-zinc-100 px-2.5 py-1 text-sm text-black transition-colors duration-200 hover:bg-zinc-950 hover:text-zinc-50 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
-      >
-        {children}
-        <svg
-          width="15"
-          height="15"
-          viewBox="0 0 15 15"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-3 w-3"
-        >
-          <path
-            d="M3.64645 11.3536C3.45118 11.1583 3.45118 10.8417 3.64645 10.6465L10.2929 4L6 4C5.72386 4 5.5 3.77614 5.5 3.5C5.5 3.22386 5.72386 3 6 3L11.5 3C11.6326 3 11.7598 3.05268 11.8536 3.14645C11.9473 3.24022 12 3.36739 12 3.5L12 9.00001C12 9.27615 11.7761 9.50001 11.5 9.50001C11.2239 9.50001 11 9.27615 11 9.00001V4.70711L4.35355 11.3536C4.15829 11.5488 3.84171 11.5488 3.64645 11.3536Z"
-            fill="currentColor"
-            fillRule="evenodd"
-            clipRule="evenodd"
-          ></path>
-        </svg>
-      </a>
-    </Magnetic>
+    <svg {...iconProps}>
+      <rect x="2.5" y="4.75" width="19" height="14.5" rx="2.5" />
+      <path d="m3.5 7 7.6 5.3a1.6 1.6 0 0 0 1.8 0L20.5 7" />
+    </svg>
   )
 }
 
-function ServicesSection() {
+function LinkedInIcon() {
   return (
-    <motion.section
-      variants={VARIANTS_SECTION}
-      transition={TRANSITION_SECTION}
+    <svg {...iconProps}>
+      <rect x="3" y="3" width="18" height="18" rx="2.5" />
+      <path d="M7.5 10.5v6.5" />
+      <circle cx="7.5" cy="7.4" r="0.9" fill="currentColor" stroke="none" />
+      <path d="M11.5 17v-6.5" />
+      <path d="M11.5 13.2c0-1.6 1.1-2.8 2.6-2.8s2.4 1.1 2.4 2.8V17" />
+    </svg>
+  )
+}
+
+function GithubIcon() {
+  return (
+    <svg {...iconProps}>
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+      <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+  )
+}
+
+const CONTACT_LINK_CLASSNAME =
+  'inline-flex shrink-0 items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400'
+
+const SOCIAL_ICONS: Record<string, () => React.ReactElement> = {
+  github: GithubIcon,
+  linkedin: LinkedInIcon,
+}
+
+function SocialLink({ label, link }: { label: string; link: string }) {
+  const Icon = SOCIAL_ICONS[label.toLowerCase()] ?? MailIcon
+
+  return (
+    <a
+      href={link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={CONTACT_LINK_CLASSNAME}
     >
-      <h3 className="mb-3 text-lg font-medium">Business</h3>
-      <div className="flex flex-col space-y-2">
-        {SERVICES.map((service) => (
-          <Link
-            key={service.id}
-            className="relative overflow-hidden rounded-2xl bg-zinc-300/30 p-[1px] dark:bg-zinc-600/30"
-            href={service.link || '#'}
-          >
-            <Spotlight
-              className="from-zinc-900 via-zinc-800 to-zinc-700 blur-2xl dark:from-zinc-100 dark:via-zinc-200 dark:to-zinc-50"
-              size={64}
-            />
-            <div className="relative h-full w-full rounded-[15px] bg-white p-4 dark:bg-zinc-950">
-              <div className="relative flex w-full flex-col space-y-1">
-                <h4 className="text-sm font-normal text-zinc-900 dark:text-zinc-100">
-                  {service.name}
-                </h4>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  {service.description}
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </motion.section>
+      <Icon />
+      <span className="sr-only">{label}: </span>
+      {link}
+    </a>
+  )
+}
+
+function CareerLink({
+  href,
+  className,
+  children,
+}: {
+  href: string
+  className?: string
+  children: React.ReactNode
+}) {
+  if (href.startsWith('/')) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    )
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
+      {children}
+    </a>
   )
 }
 
@@ -218,7 +239,9 @@ export default function Personal() {
       >
         <div className="flex-1">
           <p className="text-zinc-600 dark:text-zinc-400">
-          I'm a software engineer with a wide range of creative interests and hobbies. This site is my hub for documenting life in key areas and the things I'm learning along the way. One life, one story.
+            I'm a software engineer with a wide range of creative interests and
+            hobbies. This site is my hub for documenting life in key areas and
+            the things I'm learning along the way. One life, one story.
           </p>
           <div className="mt-6">
             <Image
@@ -227,14 +250,11 @@ export default function Personal() {
               width={1200}
               height={800}
               objectFit="fill"
-              className="w-full rounded-2xl grayscale object-cover"
+              className="w-full rounded-2xl object-cover grayscale"
             />
           </div>
-
         </div>
       </motion.section>
-
-      <ServicesSection />
 
       <motion.section
         variants={VARIANTS_SECTION}
@@ -243,12 +263,10 @@ export default function Personal() {
         <h3 className="mb-5 text-lg font-medium">Career</h3>
         <div className="flex flex-col space-y-2">
           {WORK_EXPERIENCE.map((job) => (
-            <a
-              className="relative overflow-hidden rounded-2xl bg-zinc-300/30 p-[1px] dark:bg-zinc-600/30"
-              href={job.link}
-              target="_blank"
-              rel="noopener noreferrer"
+            <CareerLink
               key={job.id}
+              href={job.link}
+              className="relative overflow-hidden rounded-2xl bg-zinc-300/30 p-[1px] dark:bg-zinc-600/30"
             >
               <Spotlight
                 className="from-zinc-900 via-zinc-800 to-zinc-700 blur-2xl dark:from-zinc-100 dark:via-zinc-200 dark:to-zinc-50"
@@ -264,12 +282,12 @@ export default function Personal() {
                       {job.company}
                     </p>
                   </div>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400 sm:text-right">
+                  <p className="text-sm text-zinc-600 sm:text-right dark:text-zinc-400">
                     {job.start} - {job.end}
                   </p>
                 </div>
               </div>
-            </a>
+            </CareerLink>
           ))}
         </div>
       </motion.section>
@@ -278,7 +296,7 @@ export default function Personal() {
         variants={VARIANTS_SECTION}
         transition={TRANSITION_SECTION}
       >
-        <h3 className="mb-3 text-lg font-medium">Hobbies</h3>
+        <h3 className="mb-3 text-lg font-medium">Work</h3>
         <div className="flex flex-col space-y-2">
           {PROJECTS.map((project) => (
             <Link
@@ -319,17 +337,14 @@ export default function Personal() {
         variants={VARIANTS_SECTION}
         transition={TRANSITION_SECTION}
       >
-        <h3 className="mb-5 text-lg font-medium">Let's Work</h3>
-        <p className="mb-5 text-zinc-600 dark:text-zinc-400">
-          <a className="underline dark:text-zinc-300" href={`mailto:${EMAIL}`}>
+        <h3 className="mb-5 text-lg font-medium">Contact</h3>
+        <div className="flex flex-col items-start gap-3">
+          <a className={CONTACT_LINK_CLASSNAME} href={`mailto:${EMAIL}`}>
+            <MailIcon />
             {EMAIL}
           </a>
-        </p>
-        <div className="flex flex-wrap items-center justify-start gap-3">
           {SOCIAL_LINKS.map((link) => (
-            <MagneticSocialLink key={link.label} link={link.link}>
-              {link.label}
-            </MagneticSocialLink>
+            <SocialLink key={link.label} label={link.label} link={link.link} />
           ))}
         </div>
       </motion.section>
