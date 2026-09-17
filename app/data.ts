@@ -1,12 +1,3 @@
-type Service = {
-  name: string
-  description: string
-  link?: string
-  video?: string
-  image?: string
-  id: string
-}
-
 type WorkExperience = {
   company: string
   title: string
@@ -28,30 +19,20 @@ type SocialLink = {
   link: string
 }
 
-export const SERVICES: Service[] = [
-  {
-    name: 'Web Design & Development',
-    description:
-      'With hosting, branding & SEO as needed. Delivered within 1-2 weeks. Starting at $300.',
-    link: '/services/web-design-development',
-    id: 'service2',
-  },
-]
-
 export const WORK_EXPERIENCE: WorkExperience[] = [
   {
     company: 'GoDaddy',
     title: 'Software Engineer',
-    start: 'April 2022',
-    end: 'Present',
+    start: '2022',
+    end: '2026',
     link: 'https://godaddy.com',
     id: 'work1',
   },
   {
     company: 'Rebel.com',
     title: 'Software Developer',
-    start: 'May 2020',
-    end: 'April 2022',
+    start: '2020',
+    end: '2022',
     link: 'https://rebel.com',
     id: 'work2',
   },
@@ -62,28 +43,25 @@ export const WORK_EXPERIENCE: WorkExperience[] = [
 // 1. The metadata export in app/projects/[slug]/page.mdx
 // 2. The entry in PROJECTS below
 export const PROJECTS: Project[] = [
-
   {
     title: 'Lighthouse Church Ottawa',
-    description:
-      'A website rebuild for a multi-campus church in Ottawa.',
+    description: 'A website rebuild for a multi-campus church in Ottawa.',
     link: '/projects/lighthouse-church-ottawa',
     uid: 'project-3',
   },
   {
     title: 'Galentines 2026: The Love of God Conference',
     description:
-      'A website for an annual Christian women\'s conference in Ottawa.',
+      "A website for an annual Christian women's conference in Ottawa.",
     link: '/projects/galentines-2026',
     uid: 'project-1',
   },
   {
     title: 'Designing an App to Help Churches Engage with Newcomers',
-    description:
-      'A mobile app design to help churches engage with newcomers.',
+    description: 'A mobile app design to help churches engage with newcomers.',
     link: '/projects/church-guest-engagement',
     uid: 'project-2',
-  }
+  },
 ]
 
 export const SOCIAL_LINKS: SocialLink[] = [
@@ -93,7 +71,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
   },
   {
     label: 'LinkedIn',
-    link: 'https://www.linkedin.com/in/ifeadese/',
+    link: 'https://www.linkedin.com/in/ifeadese',
   },
 ]
 
